@@ -44,7 +44,7 @@ const App = () => {
         <LandingPage onListingClick={navigateToListing} />
       ) : (
         <>
-          <button onClick={navigateToLanding} style={{ margin: '10px' }}>Back to Favorites</button>
+          <button onClick={navigateToLanding} style={{ margin: '10px' }} className="styled-button">Back to Favorites</button>
           <Calendar availableTourDays={currentView.listingData.openHouses} />
         </>
       )}

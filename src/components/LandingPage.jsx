@@ -5,22 +5,28 @@ const LandingPage = ({ onListingClick }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        const response = await fetch('/api/saved-listings');
-        if (!response.ok) {
-          throw new Error('Failed to fetch favorites');
-        }
-        const data = await response.json();
-        setFavorites(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchFavorites = async (retries = 3) => {
+    try {
+      const response = await fetch('/api/saved-listings');
+      if (!response.ok) {
+        throw new Error('Failed to fetch favorites');
       }
-    };
+      const data = await response.json();
+      setFavorites(data);
+      setError(null); 
+    } catch (err) {
+      if (retries > 0) {
+        console.warn(`Retrying... Attempts left: ${retries - 1}`);
+        fetchFavorites(retries - 1);
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFavorites();
   }, []);
 
@@ -29,11 +35,16 @@ const LandingPage = ({ onListingClick }) => {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div>
+        <p>Error: {error}</p>
+        <button onClick={() => fetchFavorites()}>Retry</button>
+      </div>
+    );
   }
 
   return (
-    <div className="favorites-container">
+    <div>
       <h1>Your Favorite Listings</h1>
       <div className="card-grid">
         {favorites.map((listing) => (

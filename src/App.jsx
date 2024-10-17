@@ -1,50 +1,53 @@
-import React, {useState, useEffect} from 'react';
-import Calendar from './components/Calendar';
+import React, { useState, useEffect } from 'react';
 import Spinner from './components/Spinner';
-
-const MOCK_API_RESPONSE = {
-  id: '1235',
-  address: '123 Main St',
-  city: 'New York City',
-  state: 'NY',
-  zipCode: '10001',
-  price: 1000000,
-  bedrooms: 2,
-  bathrooms: 1.5,
-  isSaved: true,
-  isFavorited: true,
-  openHouses: [
-    {
-      date: '2024-6-01',
-      time: '10:00 AM',
-    },
-    {
-      date: '2024-6-02',
-      time: '11:00 AM',
-    },
-    {
-      date: '2024-7-03',
-      time: '12:00 PM',
-    },
-  ],
-};
+import LandingPage from './components/LandingPage';
+import Calendar from './components/Calendar';
 
 const App = () => {
   const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState({ view: 'landing', listingId: null, listingData: null });
 
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
-    }, 1000); // Simulate loading time
+    }, 1000);
   }, []);
+
+  const navigateToListing = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/saved-listings/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch listing details');
+      }
+      const data = await response.json();
+      setCurrentView({ view: 'calendar', listingId: id, listingData: data });
+    } catch (error) {
+      console.error(error);
+      alert("Error loading listing details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const navigateToLanding = () => {
+    setCurrentView({ view: 'landing', listingId: null, listingData: null });
+  };
 
   if (loading) {
     return <Spinner />;
   }
 
   return (
-    <div className="calendar-container">
-      <Calendar availableTourDays={MOCK_API_RESPONSE.openHouses} />
+    <div>
+      {currentView.view === 'landing' ? (
+        <LandingPage onListingClick={navigateToListing} />
+      ) : (
+        <>
+          <button onClick={navigateToLanding} style={{ margin: '10px' }}>Back to Favorites</button>
+          <Calendar availableTourDays={currentView.listingData.openHouses} />
+        </>
+      )}
     </div>
   );
 };
